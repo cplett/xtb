@@ -240,7 +240,9 @@ contains
       if (optlvl == 'gfn0') fnv = xfind(p_fname_param_gfn0)
       if (optlvl == 'gfn1') fnv = xfind(p_fname_param_gfn1)
       call newCalculator(env, comb, calc, fnv, restart, acc)
+      call env%checkpoint("Could not setup single-point calculator")
       call initDefaults(env, calc, comb, gsolvstate_iff)
+      call env%checkpoint("Could not setup defaults")
       write(*,*) 'initialization done'
 
       select type (calc)
@@ -600,7 +602,9 @@ contains
 
          l = 0
          do j = 1, 14
-            if (cssym .and. mvec(icssym, j) .lt. 0) cycle ! exclude sym. equiv.
+            if (cssym) then
+               if(mvec(icssym, j) .lt. 0) cycle ! exclude sym. equiv.
+            end if
             r = stepr4
             if (j .gt. 6) r = stepr4/sqrt(3.)
             dum2(1:3) = mvec(1:3, j)*r !mvec just vector in every direction in 3D
@@ -1052,6 +1056,7 @@ contains
 
       !> Read the constrain again with new xyz only if necessary
       if (constraint_xyz) then
+         nconstr=0 !Reset number of constraints for distance, angle, and dihedral
          call read_userdata(xcontrol, env, mol)
          call constrain_xTB_gff(env, mol)
       end if
@@ -1108,6 +1113,7 @@ contains
 !            deallocate(wpot(i)%list)
             if(allocated(wpot(i)%list)) deallocate(wpot(i)%list)
          end do
+         nconstr=0 !Reset number of constraints for distance, angle, and dihedral
          call read_userdata(xcontrol, env, mol)
          call constrain_xTB_gff(env, mol)
       end if
